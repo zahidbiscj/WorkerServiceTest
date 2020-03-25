@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace BitcoinCurrentPrice
 {
@@ -16,17 +17,54 @@ namespace BitcoinCurrentPrice
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+                .Enrich.FromLogContext()
+                .WriteTo.File(@"D:\temp\workerService\logfile.txt")
+                .CreateLogger();
+
+            try
+            {
+                Log.Information("Starting the service");
+                CreateHostBuilder(args).Build().Run();
+                return;
+            }
+            catch (Exception e)
+            {
+                Log.Fatal(e, "There was a problem in Starting the service");
+                return;
+            }
+            finally
+            {
+                Log.CloseAndFlush();
+            }
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureServices((hostContext, services) =>
-                {
-                    services.AddHostedService<Worker>();
-                });
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
+                .UseWindowsService()
+               .ConfigureServices((hostContext, services) =>
+               {
+                   services.AddHostedService<Worker>();
+               })
+           .UseSerilog();
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*services.AddTransient<IBitcoinUnitOfWork, BitcoinUnitOfWork>();
                     services.AddTransient<IBitcoinPriceCheckService, BitcoinPriceCheckService>();

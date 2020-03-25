@@ -24,32 +24,34 @@ namespace BitcoinCurrentPrice
         private static IServiceProvider _serviceProvider;
         private readonly ILogger<Worker> _logger;
         private HttpClient _client;
-        private IBitcoinPriceCheckService bitcoinPriceCheckService;
+        private IBitcoinPriceCheckService _bitcoinPriceCheckService;
         public IConfiguration Configuration { get; }
-        public Worker(ILogger<Worker> logger)
+        public Worker(ILogger<Worker> logger,IConfiguration configuration,IServiceProvider serviceProvider)
         {
             _logger = logger;
+            Configuration = configuration;
+            _serviceProvider = serviceProvider;
         }
         public void ConfigureServices()
         {
-            /*var connectionString = Configuration.GetConnectionString("DefaultConnection");
-            services.AddDbContext<BitcoinContext>(x => x.UseSqlServer(connectionString));*/
-            var services = new ServiceCollection();
-            services.AddScoped<BitcoinUnitOfWork>(x => new BitcoinUnitOfWork());
+            var connectionString = Configuration.GetConnectionString("DefaultConnection");
 
-            services.AddScoped<IBitcoinUnitOfWork, BitcoinUnitOfWork>();
-            services.AddScoped<IBitcoinPriceCheckService, BitcoinPriceCheckService>();
+            var services = new ServiceCollection();
+            services.AddTransient<BitcoinUnitOfWork>(x => new BitcoinUnitOfWork(connectionString));
+
+            services.AddTransient<IBitcoinUnitOfWork, BitcoinUnitOfWork>();
+            services.AddTransient<IBitcoinPriceCheckService>();
             services
-            .AddScoped<IBpiRepository, BpiRepository>()
-            .AddScoped<IEURRepository, EURRepository>()
-            .AddScoped<IGBPRepository, GBPRepository>()
-            .AddScoped<IRootObjectRepository, RootObjectRepository>()
-            .AddScoped<ITimeRepository, TimeRepository>()
-            .AddScoped<IUSDRepository, USDRepository>();
+            .AddTransient<IBpiRepository, BpiRepository>()
+            .AddTransient<IEURRepository, EURRepository>()
+            .AddTransient<IGBPRepository, GBPRepository>()
+            .AddTransient<IRootObjectRepository, RootObjectRepository>()
+            .AddTransient<ITimeRepository, TimeRepository>()
+            .AddTransient<IUSDRepository, USDRepository>();
 
             _serviceProvider = services.BuildServiceProvider();
 
-            bitcoinPriceCheckService = _serviceProvider.GetRequiredService<IBitcoinPriceCheckService>();
+            _bitcoinPriceCheckService = _serviceProvider.GetRequiredService<IBitcoinPriceCheckService>();
         }
 
         public override Task StartAsync(CancellationToken cancellationToken)
@@ -62,6 +64,7 @@ namespace BitcoinCurrentPrice
         public override Task StopAsync(CancellationToken cancellationToken)
         {
             _client.Dispose();
+            _logger.LogInformation("The service has stopped");
             return base.StopAsync(cancellationToken);
         }
 
@@ -73,9 +76,9 @@ namespace BitcoinCurrentPrice
                 if (result.IsSuccessStatusCode)
                 {
                     _logger.LogInformation("Server is up. status code = " + result.StatusCode);
-                    GetItem(bitcoinPriceCheckService);
+                    GetItem(_bitcoinPriceCheckService);
                 }
-                else 
+                else
                 {
                     _logger.LogError("Stopped . Status code = "+result.StatusCode);
                 }

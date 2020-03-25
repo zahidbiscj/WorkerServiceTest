@@ -16,9 +16,8 @@ namespace BitcoinCurrentPrice
         public ITimeRepository TimeRepository { get; set; }
         public IUSDRepository USDRepository { get; set; }
 
-        public BitcoinUnitOfWork()
+        public BitcoinUnitOfWork(string connectionString)
         {
-            var connectionString = "Server=DESKTOP-1CNTA40; Database = Test; User Id = zahid; Password = 123;";
             _context = new BitcoinContext(connectionString);
 
             BpiRepository = new BpiRepository(_context);

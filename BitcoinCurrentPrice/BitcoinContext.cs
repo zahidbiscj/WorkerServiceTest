@@ -9,14 +9,14 @@ namespace BitcoinCurrentPrice
     public class BitcoinContext : DbContext
     {
         private string _connectionString;
-
         public BitcoinContext()
         {
             _connectionString = "Server=DESKTOP-1CNTA40; Database = Test; User Id = zahid; Password = 123;";
         }
+
         public BitcoinContext(string connectionString)
         {
-            _connectionString = "Server=DESKTOP-1CNTA40; Database = Test; User Id = zahid; Password = 123;";
+            //_connectionString = "Server=DESKTOP-1CNTA40; Database = Test; User Id = zahid; Password = 123;";
             _connectionString = connectionString;
         }
 
