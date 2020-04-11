@@ -37,10 +37,10 @@ namespace BitcoinCurrentPrice
             var connectionString = Configuration.GetConnectionString("DefaultConnection");
 
             var services = new ServiceCollection();
-            services.AddTransient<BitcoinUnitOfWork>(x => new BitcoinUnitOfWork(connectionString));
 
-            services.AddTransient<IBitcoinUnitOfWork, BitcoinUnitOfWork>();
-            services.AddTransient<IBitcoinPriceCheckService>();
+            services.AddTransient<IBitcoinUnitOfWork>(x => new BitcoinUnitOfWork(connectionString));
+            services.AddTransient<IBitcoinPriceCollect, BitcoinPriceCollect>();
+            services.AddTransient<IBitcoinPriceCheckService,BitcoinPriceCheckService>();
             services
             .AddTransient<IBpiRepository, BpiRepository>()
             .AddTransient<IEURRepository, EURRepository>()
